@@ -1,0 +1,42 @@
+---
+title: "AviationWeather"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+```
+
+```{r library load}
+library(tidyverse)
+library(XML)
+library(xml2)
+library(plyr)
+```
+
+```{r}
+metar_xml_url <- "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&stationString=PHTO&hoursBeforeNow=4"
+
+metar_xml_read <- read_xml(metar_xml_url)
+
+metar_xml <- xmlTreeParse(metar_xml_read, useInternalNodes = TRUE)
+
+metar_xml_root <- xmlRoot(metar_xml)
+
+metar_as_list <- xmlToList(metar_xml_root)
+
+metar_as_list_dd <- metar_as_list[["data"]][grep("METAR", names(metar_as_list[["data"]]))]
+
+max(length(metar_as_list_dd[["METAR"]]))
+
+list_to_data_frame_func <- function(x){
+output_final <- data.frame(matrix(ncol = length(x[[1]][1:12]), nrow = length(x) + 1), stringsAsFactors = FALSE)
+colnames(output_final) <- names(x[[1]][1:12])
+  for(i in 1:length(x)){
+    output_final[i,] <- t(x[[i]][1:12])
+  } 
+  output_final
+} 
+
+metar_adjusted <- list_to_data_frame_func(metar_as_list_dd)
+```
