@@ -15,7 +15,7 @@ library(plyr)
 ```
 
 ```{r}
-metar_xml_url <- "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&stationString=PHTO&hoursBeforeNow=4"
+metar_xml_url <- "https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=metars&requestType=retrieve&format=xml&stationString=KPAE&hoursBeforeNow=4"
 
 metar_xml_read <- read_xml(metar_xml_url)
 
@@ -27,16 +27,30 @@ metar_as_list <- xmlToList(metar_xml_root)
 
 metar_as_list_dd <- metar_as_list[["data"]][grep("METAR", names(metar_as_list[["data"]]))]
 
-max(length(metar_as_list_dd[["METAR"]]))
-
 list_to_data_frame_func <- function(x){
-output_final <- data.frame(matrix(ncol = length(x[[1]][1:12]), nrow = length(x) + 1), stringsAsFactors = FALSE)
-colnames(output_final) <- names(x[[1]][1:12])
+  output_final <- data.frame(matrix(ncol = length(x[[1]][1:17]), nrow = length(x)), stringsAsFactors = FALSE)
+  colnames(output_final) <- names(x[[1]][1:17])
   for(i in 1:length(x)){
-    output_final[i,] <- t(x[[i]][1:12])
+    output_final[i,] <- t(x[[i]][1:17])
   } 
   output_final
 } 
 
 metar_adjusted <- list_to_data_frame_func(metar_as_list_dd)
+
+metar_adjusted
+```
+
+```{r}
+taf_read <- read_csv2("https://www.aviationweather.gov/adds/dataserver_current/httpparam?dataSource=tafs&requestType=retrieve&format=csv&stationString=KDEN&hoursBeforeNow=2", skip = 4)
+
+column_count <- str_split(taf_read[[1]][1],",")
+
+taf_df <- as.data.frame(str_split_fixed(taf[[1]], ",", n = length(column_count[[1]])), stringsAsFactors = FALSE)
+
+colnames(taf_df) <- taf_df[1,1:306]
+
+taf_df <- taf_df[-1,]
+taf_df <- taf_df[,-307]
+
 ```
